@@ -14,3 +14,5 @@
 .cloud-login{max-width:460px;margin:10vh auto}.cloud-login #pin{font-size:20px;text-align:left;letter-spacing:normal}.cloud-login button{width:100%}
 
 .voice-controls{opacity:1;display:flex;gap:5px;top:7px;left:10px;background:#fffdf8c7;padding:5px;border:1px solid #fff;border-radius:12px;backdrop-filter:blur(12px)}.voice-controls button{font-size:12px;padding:7px 10px}.voice-controls.enabled{opacity:.35}.voice-controls:hover,.voice-controls:focus-within{opacity:1}
+
+.screen-instructions{align-self:center;text-align:right;max-width:52%;padding-left:2vw}.order-instruction{font-size:clamp(17px,3.05vw,42px);font-weight:650;line-height:1.65;letter-spacing:.045em;color:#456452;margin:0 0 1.3vh}.screen-instructions .display-status{display:inline-block;margin:0}@media(orientation:landscape){.order-instruction{font-size:clamp(16px,2.8vh,30px);line-height:1.4;margin-bottom:.5vh}.order-instruction br{display:none}.screen-instructions{max-width:55%}}
