@@ -23,11 +23,41 @@ async function localApi(path,data={},role='cashier'){
 }
 const nativeFetch=window.fetch.bind(window);
 window.fetch=async(url,options={})=>{if(!String(url).startsWith('/api/'))return nativeFetch(url,options);try{let d;if(isKitchen){if(url==='/api/session')d={role:remote?.readyState==='open'?'kitchen':null};else{if(remote?.readyState!=='open')err('与收银台连接中断，请重新配对',401);d=await new Promise((resolve,reject)=>{const id=++rpcSequence;const timer=setTimeout(()=>{waiting.delete(id);reject(Error('收银台暂时没有回应'))},5000);waiting.set(id,{resolve,reject,timer});remote.send(JSON.stringify({id,path:url,data:options.body?JSON.parse(options.body):{}}))})}}else d=await localApi(url,options.body?JSON.parse(options.body):{});return Response.json(d)}catch(e){return Response.json({error:e.message,code:e.code||''},{status:e.status||503})}};
-const encode=d=>btoa(JSON.stringify(d));const decode=s=>JSON.parse(atob(s.trim()));
+async function encode(d){
+ const bytes=new TextEncoder().encode(JSON.stringify(d));
+ if(typeof CompressionStream==='function'){
+  const compressed=new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate'))).arrayBuffer());
+  return 'LD1:'+btoa(String.fromCharCode(...compressed));
+ }
+ return btoa(JSON.stringify(d));
+}
+async function decode(value,type){
+ const s=String(value||'').trim();if(!s||s.length>32000)throw Error('配对内容为空或过长');
+ let text;
+ try{
+  if(s.startsWith('LD1:')){
+   if(typeof DecompressionStream!=='function')throw Error('请更新浏览器后扫码');
+   const bytes=Uint8Array.from(atob(s.slice(4)),c=>c.charCodeAt(0));
+   text=await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'))).text();
+  }else text=atob(s);
+  const d=JSON.parse(text);if(d.type!==type||typeof d.sdp!=='string'||!d.sdp.startsWith('v=0'))throw Error('请扫描'+(type==='offer'?'收银台的配对二维码':'平板的回传二维码'));
+  return {type:d.type,sdp:d.sdp};
+ }catch(e){if(e.message.startsWith('请'))throw e;throw Error('不是有效的点单系统配对码')}
+}
+function trackConnection(pc,side){
+ const emit=state=>window.dispatchEvent(new CustomEvent('order-pair-state',{detail:{side,state}}));
+ let timer=null,opened=false;
+ pc.onconnectionstatechange=()=>{
+  const state=pc.connectionState;if(state!=='connected')emit(state);
+  if(['failed','closed'].includes(state))clearTimeout(timer);
+  if(state==='connecting'&&!timer)timer=setTimeout(()=>{if(!opened)emit('timeout')},25000);
+ };
+ return dc=>{dc.addEventListener('open',()=>{opened=true;clearTimeout(timer);emit('connected')});dc.addEventListener('close',()=>emit('disconnected'))};
+}
 function iceReady(pc){return new Promise((resolve,reject)=>{if(pc.iceGatheringState==='complete')return resolve();const timer=setTimeout(()=>reject(Error('配对码生成超时，请检查浏览器网络权限后重试')),15000);pc.onicegatheringstatechange=()=>{if(pc.iceGatheringState==='complete'){clearTimeout(timer);resolve()}}})}
 window.orderBridge={
- async offer(){const pc=new RTCPeerConnection({iceServers:[]});hostPeers.push(pc);rtc=pc;const dc=pc.createDataChannel('orders');dc.onmessage=async ev=>{try{const m=JSON.parse(ev.data);if(!['/api/state','/api/status','/api/session'].includes(m.path))throw Error('制作设备无权操作');try{dc.send(JSON.stringify({id:m.id,data:await localApi(m.path,m.data,'kitchen')}))}catch(e){dc.send(JSON.stringify({id:m.id,error:e.message,status:e.status||503}))}}catch{}};await pc.setLocalDescription(await pc.createOffer());await iceReady(pc);return encode(pc.localDescription)},
- async accept(answer){if(!rtc)throw Error('请先生成配对码');await rtc.setRemoteDescription(decode(answer));return true},
- async answer(offer){remote?.close();const pc=new RTCPeerConnection({iceServers:[]});rtc=pc;pc.ondatachannel=e=>{remote=e.channel;remote.onmessage=ev=>{const m=JSON.parse(ev.data),w=waiting.get(m.id);if(!w)return;clearTimeout(w.timer);waiting.delete(m.id);if(m.error)w.reject(Object.assign(Error(m.error),{status:m.status}));else w.resolve(m.data)};remote.onopen=()=>window.dispatchEvent(new Event('online'));remote.onclose=()=>window.dispatchEvent(new Event('offline'))};await pc.setRemoteDescription(decode(offer));await pc.setLocalDescription(await pc.createAnswer());await iceReady(pc);return encode(pc.localDescription)},
+ async offer(){const pc=new RTCPeerConnection({iceServers:[]});hostPeers=hostPeers.filter(p=>!['failed','closed'].includes(p.connectionState));hostPeers.push(pc);rtc=pc;const dc=pc.createDataChannel('orders');trackConnection(pc,'host')(dc);dc.onmessage=async ev=>{try{const m=JSON.parse(ev.data);if(!['/api/state','/api/status','/api/session'].includes(m.path))throw Error('制作设备无权操作');try{dc.send(JSON.stringify({id:m.id,data:await localApi(m.path,m.data,'kitchen')}))}catch(e){dc.send(JSON.stringify({id:m.id,error:e.message,status:e.status||503}))}}catch{}};await pc.setLocalDescription(await pc.createOffer());await iceReady(pc);return encode(pc.localDescription)},
+ async accept(answer){if(!rtc)throw Error('请先生成配对码');await rtc.setRemoteDescription(await decode(answer,'answer'));return true},
+ async answer(offer){const description=await decode(offer,'offer');remote?.close();rtc?.close();const pc=new RTCPeerConnection({iceServers:[]});rtc=pc;const track=trackConnection(pc,'kitchen');pc.ondatachannel=e=>{remote=e.channel;track(remote);remote.onmessage=ev=>{const m=JSON.parse(ev.data),w=waiting.get(m.id);if(!w)return;clearTimeout(w.timer);waiting.delete(m.id);if(m.error)w.reject(Object.assign(Error(m.error),{status:m.status}));else w.resolve(m.data)};remote.onopen=()=>window.dispatchEvent(new Event('online'));remote.onclose=()=>window.dispatchEvent(new Event('offline'))};await pc.setRemoteDescription(description);await pc.setLocalDescription(await pc.createAnswer());await iceReady(pc);return encode(pc.localDescription)},
  async export(){const rows=await localApi('/api/export');const cell=x=>'"'+String(x).replaceAll('"','""')+'"';const content='\ufeff号码,状态,金额,付款方式,商品,备注\r\n'+rows.map(o=>[o.number,o.status,(o.total/100).toFixed(2),o.payment,o.items.map(i=>i.name+' × '+i.qty).join('；'),o.note].map(cell).join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:'text/csv;charset=utf-8'}));a.download='来点订单.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),10000)}
 };
