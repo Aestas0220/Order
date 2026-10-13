@@ -51,3 +51,19 @@
 @keyframes glow{to{box-shadow:0 0 0 4px #fff5c2,0 0 35px #e1ffbe99;transform:scale(.98)}}
 @media(max-width:600px){.glass-board .queue-panel{border-radius:22px}.glass-board .queue-number{border-radius:14px}.screen-instructions{border-radius:14px}}
 @media(orientation:landscape){.mountain-display{grid-template-rows:minmax(0,23fr) minmax(0,67fr) minmax(0,10fr);padding:4vh 5vw 2vh}.screen-brand h2{font-size:clamp(32px,7vh,82px)}.screen-brand h2 span{display:inline;margin-left:.25em}.screen-brand .eyebrow{font-size:clamp(12px,2vh,23px);margin-bottom:.8vh}.screen-instructions{padding:1vh 1.5vw}.order-instruction{font-size:clamp(15px,2.5vh,30px);margin-bottom:.5vh}.screen-instructions .display-status{font-size:clamp(10px,1.6vh,19px)}.glass-board{grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr) auto}.glass-board .queue-heading h1{font-size:clamp(25px,5vh,58px)}.glass-board .queue-heading span{font-size:clamp(12px,2.3vh,25px)}.glass-board .queue-number{font-size:clamp(32px,min(5.6vw,11vh),110px)}.glass-board .board-footer{font-size:clamp(12px,2vh,23px)}.screen-charity strong{font-size:clamp(16px,3vh,32px)}}
+
+/* Compact instruction line returns the title space to both queue panels. */
+.mountain-display{grid-template-rows:minmax(0,8fr) minmax(0,84fr) minmax(0,8fr);padding-top:5vh}
+.screen-brand{justify-content:center;padding:0}
+.screen-instructions{max-width:100%;width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:1.2vh 2.2vw;border-radius:18px;background:#17382c66;border-color:#fff7e280;text-shadow:0 1px 6px #18382e66}
+.order-instruction{margin:0;font-size:clamp(16px,3vw,38px);line-height:1.4}.order-instruction br{display:none}
+.screen-instructions .display-status{flex-shrink:0;background:#233e3199;color:#fff9ed;border-color:#ffffff55}
+.glass-board .queue-panel{background:#23382e45;backdrop-filter:blur(30px) saturate(110%);-webkit-backdrop-filter:blur(30px) saturate(110%)}
+.glass-board .pickup{background:#233b3145;border-color:#e1efc8b3}
+.glass-board .queue-heading h1{color:#fff0c7}.glass-board .queue-heading h1::before{background:#fff0c7}
+.glass-board .pickup .queue-heading h1{color:#e7f5d4}.glass-board .pickup .queue-heading h1::before{background:#e7f5d4}
+.glass-board .queue-heading span{background:#233e316b}
+.glass-board .cooking .queue-number{background:#fff3dff0;color:#253d32}
+.glass-board .pickup .queue-number{background:#e1edccf5;color:#1d3c30}
+.glass-board .queue-number{font-size:clamp(40px,12vw,154px)}
+@media(orientation:landscape){.mountain-display{grid-template-rows:minmax(0,12fr) minmax(0,79fr) minmax(0,9fr);padding-top:5vh}.screen-instructions{padding:1vh 2vw}.order-instruction{font-size:clamp(15px,2.7vh,30px)}.glass-board .queue-number{font-size:clamp(32px,min(5.6vw,13vh),110px)}}
