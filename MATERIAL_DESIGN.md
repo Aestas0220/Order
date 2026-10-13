@@ -1,21 +1,18 @@
-# Material Design 3 界面规范
+# Material Design 3
 
-本次重做范围：首页、登录、收银、制作清单、副屏、菜单编辑、确认弹窗、号码票据、提示消息。
+首页、收银台、制作端、登录和菜单设置改用 Google 官方 @material/web。按钮、筛选芯片、输入框、复选框、弹窗和涟漪采用官方默认样式与尺寸，未覆盖组件圆角。菜单与订单卡片采用 M3 的 12px 卡片形状。
 
-依据 Google 官方规范：
-- 颜色角色：https://m3.material.io/styles/color/roles
-- 字体层级：https://m3.material.io/styles/typography/applying-type
-- 按钮：https://m3.material.io/components/buttons/overview
-- 卡片：https://m3.material.io/components/cards/overview
-- 输入框：https://m3.material.io/components/text-fields/overview
-- 弹窗：https://m3.material.io/components/dialogs/overview
-- 筛选芯片：https://m3.material.io/components/chips/overview
-- 分段按钮：https://m3.material.io/components/segmented-buttons/overview
+主题由 Google @material/material-color-utilities 生成，种子 #c2d843，浅色 Tonal Spot。所有颜色通过语义角色统一。
 
-使用 M3 浅色基线配色与语义颜色变量；文字使用 display/headline/title/body/label 层级；按钮使用 filled、tonal、outlined、text 层级；卡片 12px、弹窗 28px 圆角；交互控件提供至少 48px 触控高度、hover/pressed/focus/disabled 状态；输入框具有持续标签、填充背景、焦点指示；弹窗保留原生焦点约束与 Escape；提示消息使用 inverse surface。
+控件打包在 material.js，主题在 theme.css；没有 Google Fonts、esm.run 或其他运行时 CDN 依赖。
 
-采用自有 HTML/CSS 实现，不是 Google 官方组件库。中文使用本机无衬线字体，无外部字体或样式 CDN。副屏群峦仅为装饰插画，界面卡片改为实色 Material surface；副屏号码按远距离观看需求放大。
+副屏保持之前的群峦毛玻璃界面，由 display.css 单独控制；不加载黄绿色主题。订单数据库和语音模块保持原实现。
 
-订单、价格、服务器和语音叫号逻辑保持不变。
+官方参考：
+- https://github.com/material-components/material-web/blob/main/docs/quick-start.md
+- https://github.com/material-components/material-web/blob/main/docs/components/dialog.md
+- https://github.com/material-components/material-web/blob/main/docs/components/chip.md
+- https://github.com/material-components/material-web/blob/main/docs/components/text-field.md
+- https://github.com/material-foundation/material-color-utilities
 
-更新：副屏按要求恢复此前群峦毛玻璃界面，单独使用 display.css；其他页面继续使用 M3 样式。
+组件版本及许可见 THIRD_PARTY_NOTICES.txt 和 MATERIAL_LICENSE.txt。
